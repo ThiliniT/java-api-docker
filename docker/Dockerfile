@@ -1,9 +1,17 @@
 
-FROM openjdk:8-jre-alpine
 
-COPY echo-0.0.1-SNAPSHOT.jar /echo.war
+FROM maven:3.9.0-eclipse-temurin-19-focal as build
+ENV HOME=/usr/app
+RUN mkdir -p $HOME
+WORKDIR $HOME
+ADD . $HOME
+RUN mvn -version
+RUN mvn package -Dmaven.test.skip
+RUN echo $JAVA_HOME
+FROM eclipse-temurin:19-jre-alpine
+COPY --from=build /usr/app/target/echo-0.0.1-SNAPSHOT.jar /app/echo-0.0.1-SNAPSHOT.jar
 
 # Set a non-root user
 USER 10014
 EXPOSE 8080
-ENTRYPOINT java -jar /echo.war
+ENTRYPOINT java -jar /app/echo-0.0.1-SNAPSHOT.jar
